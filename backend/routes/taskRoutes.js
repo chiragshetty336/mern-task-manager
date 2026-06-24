@@ -3,24 +3,54 @@ const Task = require('../models/Task');
 const protect = require('../middleware/authMiddleware');
 
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 
 // GET all tasks for logged-in user
 router.get('/', protect, async (req, res) => {
-  const tasks = await Task.find({ user: req.userId }).sort({ createdAt: -1 });
-  res.json(tasks);
-});
-
-// CREATE a new task
-router.post('/', protect, async (req, res) => {
   try {
-    const { title } = req.body;
-    const task = new Task({ title, user: req.userId });
-    await task.save();
-    res.status(201).json(task);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const totalTasks = await Task.countDocuments({ user: req.userId });
+
+    const tasks = await Task.find({ user: req.userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      tasks,
+      currentPage: page,
+      totalPages: Math.ceil(totalTasks / limit),
+      totalTasks,
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+// CREATE a new task
+router.post(
+  '/',
+  protect,
+  [body('title').trim().notEmpty().withMessage('Task title cannot be empty')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
+    }
+
+    try {
+      const { title } = req.body;
+      const task = new Task({ title, user: req.userId });
+      await task.save();
+      res.status(201).json(task);
+    } catch (err) {
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
+  }
+);
 
 // UPDATE a task (toggle completed / edit title)
 router.put('/:id', protect, async (req, res) => {

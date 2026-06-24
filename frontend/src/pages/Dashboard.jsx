@@ -1,46 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import useTasks from '../hooks/useTasks';
 import TaskItem from '../components/TaskItem';
 
 function Dashboard() {
-  const [tasks, setTasks] = useState([]);
+  const { tasks, loading, error, page, totalPages, addTask, toggleTask, editTask, deleteTask, goToPage } = useTasks();
   const [title, setTitle] = useState('');
+  const [filter, setFilter] = useState('all');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    const res = await API.get('/tasks');
-    setTasks(res.data);
-  };
 
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-    const res = await API.post('/tasks', { title });
-    setTasks([res.data, ...tasks]);
+    await addTask(title);
     setTitle('');
-  };
-
-  const handleToggle = async (task) => {
-    const res = await API.put(`/tasks/${task._id}`, { completed: !task.completed });
-    setTasks(tasks.map((t) => (t._id === task._id ? res.data : t)));
-  };
-
-  const handleDelete = async (id) => {
-    await API.delete(`/tasks/${id}`);
-    setTasks(tasks.filter((t) => t._id !== id));
   };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === 'active') return !task.completed;
+    if (filter === 'completed') return task.completed;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10">
@@ -49,10 +36,7 @@ function Dashboard() {
           <h2 className="text-xl font-semibold text-gray-900">
             Welcome, <span className="text-purple-600">{user}</span>
           </h2>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-500 hover:text-red-600 transition"
-          >
+          <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-600 transition">
             Logout
           </button>
         </div>
@@ -65,21 +49,67 @@ function Dashboard() {
             onChange={(e) => setTitle(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-          <button
-            type="submit"
-            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
-          >
+          <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
             Add
           </button>
         </form>
 
-        {tasks.length === 0 ? (
+        <div className="flex gap-2 mb-4">
+          {['all', 'active', 'completed'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1 rounded-md text-sm font-medium capitalize ${
+                filter === f ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <p className="text-center text-gray-400">Loading tasks...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : filteredTasks.length === 0 ? (
           <p className="text-center text-gray-400">No tasks yet. Add one above!</p>
         ) : (
-          tasks.map((task) => (
-            <TaskItem key={task._id} task={task} onToggle={handleToggle} onDelete={handleDelete} />
+          filteredTasks.map((task) => (
+            <TaskItem
+              key={task._id}
+              task={task}
+              onToggle={toggleTask}
+              onDelete={deleteTask}
+              onEdit={editTask}
+            />
           ))
         )}
+        {/* ⬆️ that block above (loading ? ... : ...) already exists in your file */}
+
+        {/* ⬇️ ADD THE NEW PAGINATION BLOCK RIGHT HERE — after the loading/error/list block, still inside the same outer <div className="max-w-md mx-auto"> */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-3 mt-6">
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-600 disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-500">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page === totalPages}
+              className="px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-600 disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );
