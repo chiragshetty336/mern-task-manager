@@ -1,10 +1,18 @@
 import { useState } from 'react';
+import { Task } from '../types/index';
 
-function TaskItem({ task, onToggle, onDelete, onEdit }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(task.title);
+interface TaskItemProps {
+  task: Task;
+  onToggle: (task: Task) => void;
+  onDelete: (id: string) => void;
+  onEdit: (id: string, newTitle: string) => void;
+}
 
-  const handleSave = () => {
+function TaskItem({ task, onToggle, onDelete, onEdit }: TaskItemProps) {
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editedTitle, setEditedTitle] = useState<string>(task.title);
+
+  const handleSave = (): void => {
     if (editedTitle.trim() === '') return;
     onEdit(task._id, editedTitle);
     setIsEditing(false);
@@ -16,7 +24,7 @@ function TaskItem({ task, onToggle, onDelete, onEdit }) {
         <input
           type="text"
           value={editedTitle}
-          onChange={(e) => setEditedTitle(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedTitle(e.target.value)}
           className="flex-1 border border-gray-300 rounded-md px-2 py-1 mr-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           autoFocus
         />

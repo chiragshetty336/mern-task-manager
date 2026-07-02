@@ -1,27 +1,30 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import useTasks from '../hooks/useTasks';
 import TaskItem from '../components/TaskItem';
+import { FilterType } from '../types/index';
 
 function Dashboard() {
   const { tasks, loading, error, page, totalPages, addTask, toggleTask, editTask, deleteTask, goToPage } = useTasks();
-  const [title, setTitle] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [title, setTitle] = useState<string>('');
+  const [filter, setFilter] = useState<FilterType>('all');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleAddTask = async (e) => {
+  const handleAddTask = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!title.trim()) return;
     await addTask(title);
     setTitle('');
   };
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     logout();
     navigate('/login');
   };
+
+  const filters: FilterType[] = ['all', 'active', 'completed'];
 
   const filteredTasks = tasks.filter((task) => {
     if (filter === 'active') return !task.completed;
@@ -46,7 +49,7 @@ function Dashboard() {
             type="text"
             placeholder="New task..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
@@ -55,7 +58,7 @@ function Dashboard() {
         </form>
 
         <div className="flex gap-2 mb-4">
-          {['all', 'active', 'completed'].map((f) => (
+          {filters.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -85,9 +88,7 @@ function Dashboard() {
             />
           ))
         )}
-        {/* ⬆️ that block above (loading ? ... : ...) already exists in your file */}
 
-        {/* ⬇️ ADD THE NEW PAGINATION BLOCK RIGHT HERE — after the loading/error/list block, still inside the same outer <div className="max-w-md mx-auto"> */}
         {!loading && !error && totalPages > 1 && (
           <div className="flex justify-center items-center gap-3 mt-6">
             <button
@@ -109,7 +110,6 @@ function Dashboard() {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
