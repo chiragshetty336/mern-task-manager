@@ -9,6 +9,7 @@ dns.setDefaultResultOrder('ipv4first');
 
 import authRoutes from './routes/authRoutes';
 import taskRoutes from './routes/taskRoutes';
+import driverRoutes from './routes/driverRoutes';
 
 const app: Application = express();
 
@@ -21,6 +22,7 @@ app.get('/', (req: Request, res: Response): void => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/drivers', driverRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI as string)

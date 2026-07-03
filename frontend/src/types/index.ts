@@ -30,3 +30,35 @@ export interface AuthContextType {
 
 // Filter options
 export type FilterType = 'all' | 'active' | 'completed';
+
+// Driver Master types
+export interface Driver {
+  _id: string;
+  driverId: string;
+  name: string;
+  mobile: string;
+  altMobile?: string;
+  address?: string;
+  aadhaar: string;
+  dlNumber: string;
+  dlExpiry: string;
+  factory: 'DBP' | 'MRS1' | 'KOLAR';
+  status: 'Active' | 'Inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DriverFormData {
+  name: string;
+  mobile: string;
+  altMobile: string;
+  address: string;
+  aadhaar: string;
+  dlNumber: string;
+  dlExpiry: string;
+  factory: 'DBP' | 'MRS1' | 'KOLAR';
+  status: 'Active' | 'Inactive';
+}
+
+export type FactoryType = 'DBP' | 'MRS1' | 'KOLAR';
+export type DriverStatus = 'Active' | 'Inactive';
