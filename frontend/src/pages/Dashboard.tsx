@@ -1,27 +1,19 @@
 import { useState, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useTasks from "../hooks/useTasks";
 import TaskItem from "../components/TaskItem";
-import { FilterType } from "../types/index";
 
 function Dashboard() {
   const { tasks, loading, error, page, totalPages, addTask, toggleTask, editTask, deleteTask, goToPage } = useTasks();
   const [title, setTitle] = useState("");
   const [filter, setFilter] = useState("all");
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
     await addTask(title);
     setTitle("");
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
   };
 
   const filters = ["all", "active", "completed"];
@@ -33,54 +25,88 @@ function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-10">
-      <div className="max-w-md mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Welcome, <span className="text-purple-600">{user}</span>
-          </h2>
-          <div className="flex items-center gap-4">
-            <a href="/drivers" className="text-sm text-blue-600 hover:underline font-medium">Driver Master</a>
-            <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-600 transition">Logout</button>
-          </div>
-        </div>
-        <form onSubmit={handleAddTask} className="flex gap-2 mb-6">
+    <div>
+      <div style={{ marginBottom: "24px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: 600, color: "#3B0764", margin: 0 }}>
+          Welcome back, {user}
+        </h1>
+        <p style={{ color: "#7C3AED", fontSize: "14px", marginTop: "4px" }}>
+          Manage your tasks below
+        </p>
+      </div>
+
+      <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", border: "1px solid #E9D5FF" }}>
+        <form onSubmit={handleAddTask} style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
           <input
             type="text"
-            placeholder="New task..."
+            placeholder="Add a new task..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            style={{
+              flex: 1,
+              padding: "10px 14px",
+              border: "1px solid #DDD6FE",
+              borderRadius: "8px",
+              fontSize: "14px",
+              outline: "none",
+            }}
           />
-          <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">Add</button>
+          <button
+            type="submit"
+            style={{
+              padding: "10px 20px",
+              background: "#7C3AED",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Add
+          </button>
         </form>
-        <div className="flex gap-2 mb-4">
+
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
           {filters.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-md text-sm font-medium capitalize ${filter === f ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "20px",
+                border: "1px solid #DDD6FE",
+                background: filter === f ? "#7C3AED" : "#fff",
+                color: filter === f ? "#fff" : "#7C3AED",
+                fontSize: "13px",
+                fontWeight: 500,
+                cursor: "pointer",
+                textTransform: "capitalize",
+              }}
             >
               {f}
             </button>
           ))}
         </div>
+
         {loading ? (
-          <p className="text-center text-gray-400">Loading tasks...</p>
+          <p style={{ textAlign: "center", color: "#9CA3AF", padding: "20px" }}>Loading tasks...</p>
         ) : error ? (
-          <p className="text-center text-red-500">{error}</p>
+          <p style={{ textAlign: "center", color: "#EF4444", padding: "20px" }}>{error}</p>
         ) : filteredTasks.length === 0 ? (
-          <p className="text-center text-gray-400">No tasks yet. Add one above!</p>
+          <p style={{ textAlign: "center", color: "#9CA3AF", padding: "20px" }}>No tasks yet. Add one above!</p>
         ) : (
           filteredTasks.map((task) => (
             <TaskItem key={task._id} task={task} onToggle={toggleTask} onDelete={deleteTask} onEdit={editTask} />
           ))
         )}
+
         {!loading && !error && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-3 mt-6">
-            <button onClick={() => goToPage(page - 1)} disabled={page === 1} className="px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-600 disabled:opacity-40">Previous</button>
-            <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
-            <button onClick={() => goToPage(page + 1)} disabled={page === totalPages} className="px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-600 disabled:opacity-40">Next</button>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginTop: "20px" }}>
+            <button onClick={() => goToPage(page - 1)} disabled={page === 1} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid #DDD6FE", background: "#fff", color: "#7C3AED", cursor: "pointer", opacity: page === 1 ? 0.4 : 1 }}>Previous</button>
+            <span style={{ fontSize: "13px", color: "#6B7280" }}>Page {page} of {totalPages}</span>
+            <button onClick={() => goToPage(page + 1)} disabled={page === totalPages} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid #DDD6FE", background: "#fff", color: "#7C3AED", cursor: "pointer", opacity: page === totalPages ? 0.4 : 1 }}>Next</button>
           </div>
         )}
       </div>

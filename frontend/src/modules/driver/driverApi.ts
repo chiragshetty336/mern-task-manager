@@ -1,6 +1,8 @@
 import API from '../../api/axios';
 import { Driver, DriverFormData } from '../../types/index';
 
+
+
 export const fetchDrivers = async (
   search?: string,
   status?: string,
@@ -28,3 +30,4 @@ export const updateDriver = async (id: string, data: Partial<DriverFormData>): P
 export const deleteDriver = async (id: string): Promise<void> => {
   await API.delete(`/drivers/${id}`);
 };
+
