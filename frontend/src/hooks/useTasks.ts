@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
-import { Task, FilterType } from '../types/index';
+import { Task } from '../types/index';
 
 interface UseTasksReturn {
   tasks: Task[];

@@ -146,4 +146,79 @@ router.delete('/:id', protect, async (req: AuthRequest, res: Response): Promise<
   }
 });
 
+
+// POST bulk import drivers
+router.post('/bulk-import', protect, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { drivers } = req.body as {
+      drivers: Array<{
+        name: string;
+        mobile: string;
+        altMobile?: string;
+        address?: string;
+        aadhaar: string;
+        dlNumber: string;
+        dlExpiry: string;
+        factory: string;
+        status: string;
+      }>;
+    };
+
+    if (!drivers || !Array.isArray(drivers) || drivers.length === 0) {
+      res.status(400).json({ message: 'No driver data provided' });
+      return;
+    }
+
+    // Validate each row
+    const errors: string[] = [];
+    drivers.forEach((driver, index) => {
+      const row = index + 2; // Excel row number (1 = header, data starts at 2)
+      if (!driver.name) errors.push(`Row ${row}: name is required`);
+      if (!driver.mobile || driver.mobile.toString().length !== 10)
+        errors.push(`Row ${row}: mobile must be 10 digits`);
+      if (!driver.aadhaar) errors.push(`Row ${row}: aadhaar is required`);
+      if (!driver.dlNumber) errors.push(`Row ${row}: dlNumber is required`);
+      if (!driver.dlExpiry) errors.push(`Row ${row}: dlExpiry is required`);
+      if (!['DBP', 'MRS1', 'KOLAR'].includes(driver.factory))
+        errors.push(`Row ${row}: factory must be DBP, MRS1, or KOLAR`);
+      if (!['Active', 'Inactive'].includes(driver.status))
+        errors.push(`Row ${row}: status must be Active or Inactive`);
+    });
+
+    if (errors.length > 0) {
+      res.status(400).json({ message: 'Validation failed', errors });
+      return;
+    }
+
+    // Generate driver IDs
+    const existingCount = await Driver.countDocuments();
+    const driversWithIds = drivers.map((driver, index) => ({
+      ...driver,
+      mobile: driver.mobile.toString(),
+      aadhaar: driver.aadhaar.toString(),
+      driverId: `DRV${String(existingCount + index + 1).padStart(3, '0')}`,
+    }));
+
+    // Insert all at once
+    const inserted = await Driver.insertMany(driversWithIds, { ordered: false });
+
+    res.status(201).json({
+      message: `Successfully imported ${inserted.length} drivers`,
+      count: inserted.length,
+    });
+  } catch (err: unknown) {
+    // Handle partial success — some rows inserted, some failed due to duplicates
+    if ((err as any).code === 11000 || (err as any).writeErrors) {
+      const writeErrors = (err as any).writeErrors || [];
+      const inserted = (err as any).insertedDocs?.length || 0;
+      res.status(207).json({
+        message: `Partial import: ${inserted} inserted, ${writeErrors.length} failed due to duplicates`,
+        errors: writeErrors.map((e: any) => `Row ${e.index + 2}: duplicate value`),
+      });
+      return;
+    }
+    res.status(500).json({ message: 'Server error', error: (err as Error).message });
+  }
+});
+
 export default router;

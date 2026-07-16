@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import useTasks from "../hooks/useTasks";
 import TaskItem from "../components/TaskItem";
@@ -9,7 +9,7 @@ function Dashboard() {
   const [filter, setFilter] = useState("all");
   const { user } = useAuth();
 
-  const handleAddTask = async (e) => {
+  const handleAddTask = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim()) return;
     await addTask(title);

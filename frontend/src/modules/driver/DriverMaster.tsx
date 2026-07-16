@@ -1,19 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Driver, DriverFormData } from '../../types/index';
 import { fetchDrivers, createDriver, updateDriver, deleteDriver } from './driverApi';
+import DriverBulkImport from './DriverBulkImport';
 import DriverForm from './DriverForm';
 
 export default function DriverMaster() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-
-  // Filters
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [factoryFilter, setFactoryFilter] = useState<string>('All');
-
-  // Modal state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
 
@@ -85,12 +83,20 @@ export default function DriverMaster() {
             {drivers.length} driver{drivers.length !== 1 ? 's' : ''} found
           </p>
         </div>
-        <button
-          onClick={handleAdd}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
-        >
-          + Add Driver
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsBulkImportOpen(true)}
+            className="px-4 py-2 border border-purple-700 text-purple-700 rounded-md text-sm font-medium hover:bg-purple-50"
+          >
+            Bulk Import
+          </button>
+          <button
+            onClick={handleAdd}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+          >
+            + Add Driver
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -208,12 +214,23 @@ export default function DriverMaster() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Driver Form Modal */}
       {isModalOpen && (
         <DriverForm
           driver={editingDriver}
           onSave={handleSave}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {/* Bulk Import Modal */}
+      {isBulkImportOpen && (
+        <DriverBulkImport
+          onClose={() => setIsBulkImportOpen(false)}
+          onSuccess={() => {
+            setIsBulkImportOpen(false);
+            loadDrivers();
+          }}
         />
       )}
     </div>

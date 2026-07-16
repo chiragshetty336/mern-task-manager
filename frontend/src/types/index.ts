@@ -62,3 +62,34 @@ export interface DriverFormData {
 
 export type FactoryType = 'DBP' | 'MRS1' | 'KOLAR';
 export type DriverStatus = 'Active' | 'Inactive';
+
+// Vehicle Master types
+export type VehicleType = 'Truck' | 'Van' | 'Bike' | 'Tempo';
+export type VehicleStatus = 'ON ROAD' | 'MAINTENANCE' | 'STANDBY';
+
+export interface AssignedDriver {
+  _id: string;
+  name: string;
+  mobile: string;
+  driverId: string;
+}
+
+export interface Vehicle {
+  _id: string;
+  vehicleId: string;
+  registrationNumber: string;
+  type: VehicleType;
+  factory: FactoryType;
+  status: VehicleStatus;
+  assignedDriver?: AssignedDriver | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VehicleFormData {
+  registrationNumber: string;
+  type: VehicleType;
+  factory: FactoryType;
+  status: VehicleStatus;
+  assignedDriver?: string | null;
+}
